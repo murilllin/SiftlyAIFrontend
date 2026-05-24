@@ -1,0 +1,10 @@
+<button
+  class="theme-toggle"
+  (click)="toggle()"
+  [title]="theme.isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+  [class.is-dark]="theme.isDark"
+>
+  <span class="toggle-icon" [class.rotate]="rotating">
+    <i [class]="theme.isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'"></i>
+  </span>
+</button>

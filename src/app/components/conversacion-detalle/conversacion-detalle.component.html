@@ -1,0 +1,140 @@
+<div class="chat-layout">
+
+  <!-- Sidebar header -->
+  <div class="chat-header">
+    <button class="btn-volver" (click)="volver()">← Volver</button>
+    <h2 class="conv-titulo">{{ titulo }}</h2>
+  </div>
+
+  <!-- Loading inicial -->
+  <div class="loading-wrap" *ngIf="cargandoConversacion && !error">
+    <app-loading texto="Cargando conversación..."></app-loading>
+  </div>
+
+  <!-- Error de conexión -->
+  <div class="loading-wrap" *ngIf="error && cargandoConversacion === false || error && mensajes.length === 0">
+    <div class="error-grande">
+      <div style="font-size:2.5rem">⚠️</div>
+      <p>{{ error }}</p>
+      <button class="btn-volver" (click)="cargarConversacion(true)">Reintentar</button>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="mensajes-container" #mensajesContainer *ngIf="!cargandoConversacion">
+
+    <div class="empty-chat" *ngIf="mensajes.length === 0">
+      <div class="empty-icon">🚀</div>
+      <p>Escribe tu primera pregunta y recibe respuestas de <strong>5 IAs simultáneamente</strong></p>
+    </div>
+
+    <div class="mensaje-bloque" *ngFor="let msg of mensajes; trackBy: trackById">
+
+      <!-- Mensaje del usuario -->
+      <div class="user-msg" *ngIf="msg.tipo === 'USUARIO'">
+        <div class="user-bubble">
+          <span class="tipo-badge" *ngIf="msg.tipoContenido === 'IMAGEN'">🎨 Imagen</span>
+          {{ msg.contenido }}
+        </div>
+      </div>
+
+      <!-- Respuestas de las IAs -->
+      <div class="ia-respuestas" *ngIf="msg.tipo === 'USUARIO'">
+
+        <!-- Cards de IA con respuesta recibida -->
+        <div
+          class="ia-card"
+          *ngFor="let resp of msg.respuestasIA; trackBy: trackById"
+          [class.mejor]="resp.esMejorRespuesta"
+          [style.--ia-color]="getIA(resp.modeloIA).color"
+        >
+          <div class="ia-card-header">
+            <div class="ia-label">
+              <span class="ia-emoji">{{ getIA(resp.modeloIA).emoji }}</span>
+              <span class="ia-nombre">{{ getIA(resp.modeloIA).label }}</span>
+              <span class="mejor-badge" *ngIf="resp.esMejorRespuesta">⭐ Mejor</span>
+            </div>
+            <div class="ia-actions">
+              <span class="tiempo" *ngIf="resp.tiempoRespuestaMs">{{ resp.tiempoRespuestaMs }}ms</span>
+              <button
+                class="btn-mejor"
+                *ngIf="!resp.esMejorRespuesta"
+                (click)="seleccionarMejor(msg.id, resp.id)"
+                title="Marcar como mejor respuesta"
+              >⭐</button>
+            </div>
+          </div>
+          <div class="ia-body">
+            <!-- Imagen -->
+            <img
+              *ngIf="isImagen(resp.urlArchivo)"
+              [src]="resp.urlArchivo"
+              class="ia-imagen"
+              alt="Imagen generada"
+              loading="lazy"
+            />
+            <!-- Texto -->
+            <p *ngIf="!isImagen(resp.urlArchivo)" class="ia-texto">{{ resp.respuesta }}</p>
+          </div>
+        </div>
+
+        <!-- Placeholders para IAs que aún no respondieron -->
+        <div
+          class="ia-card ia-pending"
+          *ngFor="let ia of iasPendientes(msg)"
+          [style.--ia-color]="getIA(ia).color"
+        >
+          <div class="ia-card-header">
+            <div class="ia-label">
+              <span class="ia-emoji">{{ getIA(ia).emoji }}</span>
+              <span class="ia-nombre">{{ getIA(ia).label }}</span>
+            </div>
+          </div>
+          <div class="ia-body pending-body">
+            <app-loading [pequeno]="true" texto="Generando respuesta..."></app-loading>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Indicador de espera global -->
+    <div class="typing-global" *ngIf="esperandoRespuestas && mensajes.length > 0">
+      <app-loading [pequeno]="true" texto="Las IAs están respondiendo..."></app-loading>
+    </div>
+
+  </div>
+
+  <!-- Input -->
+  <div class="input-area" *ngIf="!cargandoConversacion">
+    <div class="input-tipo">
+      <button
+        class="tipo-btn"
+        [class.activo]="tipoContenido === 'TEXTO'"
+        (click)="tipoContenido = 'TEXTO'"
+      >💬 Texto</button>
+      <button
+        class="tipo-btn"
+        [class.activo]="tipoContenido === 'IMAGEN'"
+        (click)="tipoContenido = 'IMAGEN'"
+      >🎨 Imagen</button>
+    </div>
+    <div class="input-row">
+      <textarea
+        #inputMensaje
+        class="input-msg"
+        [(ngModel)]="contenido"
+        [placeholder]="tipoContenido === 'TEXTO' ? 'Escribe tu mensaje...' : 'Describe la imagen que quieres generar...'"
+        (keydown.enter)="onEnter($event)"
+        rows="1"
+      ></textarea>
+      <button class="btn-send" (click)="enviar()" [disabled]="enviando || !contenido.trim()">
+        <span *ngIf="!enviando">➤</span>
+        <app-loading *ngIf="enviando" [pequeno]="true"></app-loading>
+      </button>
+    </div>
+    <div class="error-msg" *ngIf="error">{{ error }}</div>
+    <p class="input-hint">Enter para enviar · Shift+Enter para nueva línea</p>
+  </div>
+
+</div>

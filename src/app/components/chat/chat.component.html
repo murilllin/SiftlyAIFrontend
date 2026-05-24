@@ -1,0 +1,347 @@
+<div class="shell">
+
+  
+  <aside class="sidebar" [class.closed]="!sidebarOpen">
+    <div class="sidebar-top">
+      <div class="brand">
+        <img src="https://i.imgur.com/0jeqOIS.png" alt="SiftlyAI" style="width:28px;height:28px;border-radius:6px;object-fit:cover;">
+        <span class="brand-name">Siftly<span style="color:var(--color-primary)">AI</span></span>
+      </div>
+      <button class="btn-new" (click)="nuevaConversacion()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Nueva</span>
+      </button>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section">
+        <a class="nav-item" [class.active]="sidebarSeccion === 'chats'" (click)="sidebarSeccion = 'chats'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          My Chats
+        </a>
+        <a class="nav-item" [class.active]="sidebarSeccion === 'models'" (click)="sidebarSeccion = 'models'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          AI Models
+        </a>
+        <a class="nav-item" routerLink="/admin" *ngIf="esAdmin">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          Admin
+        </a>
+      </div>
+
+      <ng-container *ngIf="sidebarSeccion === 'chats'">
+        <div class="sidebar-section-label">Recientes</div>
+        <div class="conv-list">
+          <div
+            *ngFor="let c of conversaciones; trackBy: trackById"
+            class="conv-item"
+            [class.active]="c.id === conversacionActualId"
+            (click)="seleccionarConv(c.id); cerrarSidebarMobile()"
+          >
+            <span class="conv-item-title">{{ c.titulo }}</span>
+            <button class="conv-delete" (click)="eliminarConv($event, c.id)">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div *ngIf="conversaciones.length === 0" class="conv-empty">Sin conversaciones</div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="sidebarSeccion === 'models'">
+        <div class="sidebar-section-label">Texto</div>
+        <div class="models-list">
+          <div class="model-chip" *ngFor="let ia of getIAsPorCategoria('TEXTO')" [style.--model-color]="ia.color">
+            <span style="font-weight:600">{{ ia.label }}</span>
+            <span style="opacity:0.6">{{ ia.empresa }}</span>
+          </div>
+        </div>
+        <div class="sidebar-section-label">Imagen</div>
+        <div class="models-list">
+          <div class="model-chip" *ngFor="let ia of getIAsPorCategoria('IMAGEN')" [style.--model-color]="ia.color">
+            <span style="font-weight:600">{{ ia.label }}</span>
+            <span style="opacity:0.6">{{ ia.empresa }}</span>
+          </div>
+        </div>
+        <div class="sidebar-section-label">Video</div>
+        <div class="models-list">
+          <div class="model-chip" *ngFor="let ia of getIAsPorCategoria('VIDEO')" [style.--model-color]="ia.color">
+            <span style="font-weight:600">{{ ia.label }}</span>
+            <span style="opacity:0.6">{{ ia.empresa }}</span>
+          </div>
+        </div>
+        <div class="sidebar-section-label">Audio</div>
+        <div class="models-list">
+          <div class="model-chip" *ngFor="let ia of getIAsPorCategoria('AUDIO')" [style.--model-color]="ia.color">
+            <span style="font-weight:600">{{ ia.label }}</span>
+            <span style="opacity:0.6">{{ ia.empresa }}</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-row" (click)="abrirPerfil()" title="Editar perfil">
+        <div class="avatar">{{ auth.usuario?.nombre?.charAt(0)?.toUpperCase() }}</div>
+        <div class="user-info">
+          <span class="user-name">{{ auth.usuario?.nombre }}</span>
+          <span class="user-role" *ngIf="esAdmin">Admin</span>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <app-theme-toggle></app-theme-toggle>
+        <button class="btn-logout" (click)="logout()" title="Cerrar sesión">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" *ngIf="sidebarOpen" (click)="sidebarOpen = false"></div>
+
+  <div class="perfil-overlay" *ngIf="perfilOpen" (click)="perfilOpen=false">
+    <div class="perfil-modal" (click)="$event.stopPropagation()">
+      <div class="perfil-header">
+        <span>Editar perfil</span>
+        <button class="perfil-close" (click)="perfilOpen=false"></button>
+      </div>
+      <div class="perfil-body">
+        <label>Nombre</label>
+        <input [(ngModel)]="perfilNombre" placeholder="Nombre" />
+        <label>Apellido</label>
+        <input [(ngModel)]="perfilApellido" placeholder="Apellido" />
+        <label>Email</label>
+        <input [(ngModel)]="perfilEmail" type="email" placeholder="Email" />
+        <label>Nueva contraseña <span style="opacity:.5;font-size:.8em">(opcional)</span></label>
+        <input [(ngModel)]="perfilPass" type="password" placeholder="Dejar vacío para no cambiar" />
+        <div class="perfil-error" *ngIf="perfilError">{{ perfilError }}</div>
+        <div class="perfil-ok" *ngIf="perfilOk">¡Guardado!</div>
+        <button class="perfil-save" (click)="guardarPerfil()" [disabled]="perfilGuardando">
+          {{ perfilGuardando ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  
+  <main class="main">
+
+    <button class="btn-toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+
+    
+    <div class="welcome" *ngIf="!conversacionActualId && !cargando">
+      <div class="welcome-content">
+        <div class="welcome-logo">
+          <img src="https://i.imgur.com/0jeqOIS.png" alt="SiftlyAI" style="width:64px;height:64px;border-radius:16px;object-fit:cover;margin-bottom:12px;box-shadow:0 0 30px rgba(0,82,255,0.3);">
+          <div style="font-family:'Hanken Grotesk',sans-serif;font-size:2.8rem;font-weight:700;color:var(--color-text-primary);letter-spacing:-0.02em;">
+            Siftly<span style="color:var(--color-primary)">AI</span>
+          </div>
+        </div>
+        <p class="welcome-sub">Compara respuestas de múltiples IAs al mismo tiempo.</p>
+        <div class="ia-chips-grid">
+          <div class="chips-group">
+            <span class="chips-label">Texto</span>
+            <div class="chips-row">
+              <span class="ia-chip" style="--c:#f97316">Llama 3</span>
+              <span class="ia-chip" style="--c:#06b6d4">Cohere</span>
+              <span class="ia-chip" style="--c:#a855f7">Mistral</span>
+              <span class="ia-chip" style="--c:#facc15">Gemini</span>
+              <span class="ia-chip" style="--c:#76b900">NVIDIA ×2</span>
+            </div>
+          </div>
+          <div class="chips-group">
+            <span class="chips-label">Imagen</span>
+            <div class="chips-row">
+              <span class="ia-chip" style="--c:#00b4d8">Pollinations</span>
+              <span class="ia-chip" style="--c:#1a1a1a">xAI Grok</span>
+              <span class="ia-chip" style="--c:#f43f5e">Recraft</span>
+            </div>
+          </div>
+          <div class="chips-group">
+            <span class="chips-label">Video</span>
+            <div class="chips-row">
+              <span class="ia-chip" style="--c:#f59e0b">Wan 2.6</span>
+              <span class="ia-chip" style="--c:#ef4444">Veo Lite</span>
+              <span class="ia-chip" style="--c:#1a1a1a">xAI Grok</span>
+            </div>
+          </div>
+          <div class="chips-group">
+            <span class="chips-label">Audio TTS</span>
+            <div class="chips-row">
+              <span class="ia-chip" style="--c:#f97316">Groq Orpheus</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="loading-center" *ngIf="cargando">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <p class="loading-text">Cargando conversación...</p>
+    </div>
+
+    
+    <div class="error-center" *ngIf="error && !cargando">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <p>{{ error }}</p>
+    </div>
+
+    
+    <div class="messages" #messagesContainer *ngIf="conversacionActualId && !cargando && !error">
+      <div class="empty-chat" *ngIf="mensajes.length === 0">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="opacity:.25"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        <p>Escribe tu primera pregunta para comenzar</p>
+      </div>
+
+      <div *ngFor="let msg of mensajes; trackBy: trackById" class="msg-block">
+
+        
+        <div class="user-turn" *ngIf="msg.tipo === 'USUARIO'">
+          <div class="user-bubble">
+            <span class="tipo-tag tipo-imagen" *ngIf="msg.tipoContenido === 'IMAGEN'">Imagen</span>
+            <span class="tipo-tag tipo-video" *ngIf="msg.tipoContenido === 'VIDEO'">Video</span>
+            {{ msg.contenido }}
+          </div>
+        </div>
+
+        
+        <div class="ia-turn" *ngIf="msg.tipo === 'USUARIO'">
+
+          
+          <div
+            class="ia-card"
+            *ngFor="let resp of msg.respuestasIA; trackBy: trackById"
+            [class.best]="resp.esMejorRespuesta"
+            [style.--ia-color]="getIA(resp.modeloIA).color"
+            [style.--ia-bg]="getIA(resp.modeloIA).bg"
+          >
+            <div class="ia-card-top">
+              <div class="ia-id">
+                <div class="ia-avatar" [style.background]="getIA(resp.modeloIA).bg" [style.border-color]="getIA(resp.modeloIA).color+'44'">
+                  <span style="font-size:18px">{{ getIA(resp.modeloIA).iconPath }}</span>
+                </div>
+                <div class="ia-label-group">
+                  <span class="ia-label">{{ getIA(resp.modeloIA).label }}</span>
+                  <span class="ia-empresa">{{ getIA(resp.modeloIA).empresa }}</span>
+                </div>
+                <span class="best-tag" *ngIf="resp.esMejorRespuesta">Mejor</span>
+              </div>
+              <div class="ia-card-actions">
+                <span class="ia-ms" *ngIf="resp.tiempoRespuestaMs">{{ resp.tiempoRespuestaMs }}ms</span>
+
+              </div>
+            </div>
+
+            <div class="ia-card-body">
+  
+  <ng-container *ngIf="isAudioUrl(resp)">
+    <app-audio-player [url]="resp.urlArchivo || ''"></app-audio-player>
+    <div class="dl-row">
+      <a [href]="sanitizer.bypassSecurityTrustUrl(resp.urlArchivo || '')" download="audio-tts.wav" class="btn-dl">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        Descargar audio
+      </a>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!isAudioUrl(resp) && isImagenUrl(resp.urlArchivo)">
+    <img [src]="getProxiedUrl(resp.urlArchivo)" class="ia-img" alt="Imagen generada" loading="lazy" />
+    <div class="dl-row">
+      <a [href]="resp.urlArchivo" download class="btn-dl">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        Descargar imagen
+      </a>
+    </div>
+  </ng-container>
+
+  
+  <ng-container *ngIf="!isAudioUrl(resp) && isVideoUrl(resp.urlArchivo)">
+    <div class="ia-video-container">
+      <video [src]="getProxiedUrl(resp.urlArchivo)" controls class="ia-video" preload="metadata">
+        Tu navegador no soporta videos.
+      </video>
+      <div class="dl-row">
+        <a [href]="resp.urlArchivo" download class="btn-dl">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          Descargar video
+        </a>
+      </div>
+    </div>
+  </ng-container>
+
+  
+  <ng-container *ngIf="!isAudioUrl(resp) && !isImagenUrl(resp.urlArchivo) && !isVideoUrl(resp.urlArchivo)">
+    <div class="ia-text md-body" [innerHTML]="renderMd(resp.respuesta)"></div>
+    <div class="dl-row" *ngIf="resp.respuesta">
+      <button class="btn-dl" (click)="descargarPDF(resp.respuesta, getIA(resp.modeloIA).label)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        Exportar
+      </button>
+    </div>
+  </ng-container>
+</div>
+          </div>
+
+          
+          <div
+            class="ia-card ia-pending"
+            *ngFor="let ia of iasPendientes(msg)"
+            [style.--ia-color]="getIA(ia).color"
+            [style.--ia-bg]="getIA(ia).bg"
+          >
+            <div class="ia-card-top">
+              <div class="ia-id">
+                <div class="ia-avatar pending-avatar" [style.background]="getIA(ia).bg" [style.border-color]="getIA(ia).color+'44'">
+                  <span style="font-size:18px">{{ getIA(ia).iconPath }}</span>
+                </div>
+                <div class="ia-label-group">
+                  <span class="ia-label">{{ getIA(ia).label }}</span>
+                  <span class="ia-empresa">{{ getIA(ia).empresa }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="ia-card-body pending-body">
+              <div class="typing-dots"><span></span><span></span><span></span></div>
+              <span class="typing-text">Generando...</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div #messagesEnd></div>
+    </div>
+
+    
+    <div class="input-bar" [class.centered]="!conversacionActualId">
+      <div class="input-wrap">
+        <div class="tipo-row">
+          <button class="tipo-btn" [class.on]="tipoContenido==='TEXTO'"    (click)="tipoContenido='TEXTO'">Texto</button>
+          <button class="tipo-btn" [class.on]="tipoContenido==='IMAGEN'"  (click)="tipoContenido='IMAGEN'">Imagen</button>
+          <button class="tipo-btn" [class.on]="tipoContenido==='VIDEO'"   (click)="tipoContenido='VIDEO'">Video</button>
+          <button class="tipo-btn" [class.on]="tipoContenido==='AUDIO_TTS'" (click)="tipoContenido='AUDIO_TTS'">TTS</button>
+        </div>
+
+        <div class="input-row">
+          <textarea
+            #inputRef
+            class="input-field"
+            [(ngModel)]="prompt"
+            [placeholder]="getPlaceholder()"
+            (keydown.enter)="onEnter($event)"
+            rows="1"
+          ></textarea>
+          <button class="btn-send" (click)="enviar()" [disabled]="enviando || !prompt.trim()">
+            <svg *ngIf="!enviando" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            <div *ngIf="enviando" class="send-dots"><span></span><span></span><span></span></div>
+          </button>
+        </div>
+
+        <p class="input-hint">Enter para enviar · Shift+Enter nueva línea</p>
+      </div>
+    </div>
+
+  </main>
+</div>
