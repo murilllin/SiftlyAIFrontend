@@ -1,0 +1,427 @@
+<div class="m-shell" [class.sidebar-open]="sidebarOpen">
+
+  <!-- ══ SIDEBAR MÓVIL (drawer) ══════════════════════════════════ -->
+  <div class="m-backdrop" *ngIf="sidebarOpen" (click)="sidebarOpen=false"></div>
+
+  <aside class="m-sidebar">
+    <!-- Header del sidebar -->
+    <div class="m-sidebar-header">
+      <div class="m-brand">
+        <img src="https://i.imgur.com/0jeqOIS.png" alt="SiftlyAI" class="m-brand-logo">
+        <span class="m-brand-name">Siftly<span class="m-brand-ai">AI</span></span>
+      </div>
+      <button class="m-sidebar-close" (click)="sidebarOpen=false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+
+    <!-- Nav -->
+    <nav class="m-sidebar-nav">
+      <a class="m-nav-item" [class.active]="sidebarSeccion === 'chats'" (click)="sidebarSeccion='chats'; sidebarOpen=true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        Mis Chats
+      </a>
+      <a class="m-nav-item" [class.active]="sidebarSeccion === 'models'" (click)="sidebarSeccion='models'; sidebarOpen=true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1-5h2v2h-2zm0-8h2v6h-2z"/></svg>
+        Modelos IA
+      </a>
+      <a class="m-nav-item" routerLink="/admin" *ngIf="esAdmin" (click)="sidebarOpen=false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Admin
+      </a>
+    </nav>
+
+    <!-- Chats recientes -->
+    <ng-container *ngIf="sidebarSeccion === 'chats'">
+      <div class="m-section-label">Recientes</div>
+      <div class="m-conv-list">
+        <div
+          *ngFor="let c of conversaciones; trackBy: trackById"
+          class="m-conv-item"
+          [class.active]="c.id === conversacionActualId"
+          (click)="seleccionarConv(c.id); sidebarOpen=false"
+        >
+          <div class="m-conv-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          </div>
+          <span class="m-conv-title">{{ c.titulo }}</span>
+          <button class="m-conv-delete" (click)="eliminarConv($event, c.id)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
+        </div>
+        <div *ngIf="conversaciones.length === 0" class="m-conv-empty">Sin conversaciones aún</div>
+      </div>
+    </ng-container>
+
+    <!-- Modelos IA -->
+    <ng-container *ngIf="sidebarSeccion === 'models'">
+      <div class="m-models-scroll">
+        <div class="m-section-label">Texto</div>
+        <div class="m-models-list">
+          <div class="m-model-chip" *ngFor="let ia of getIAsPorCategoria('TEXTO')" [style.--mc]="ia.color">
+            <div class="m-model-icon" [style.background]="ia.bg" [style.border-color]="ia.color+'55'" [innerHTML]="getIASvgIcon(ia)"></div>
+            <div class="m-model-info">
+              <span class="m-model-label">{{ ia.label }}</span>
+              <span class="m-model-emp">{{ ia.empresa }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="m-section-label">Imagen</div>
+        <div class="m-models-list">
+          <div class="m-model-chip" *ngFor="let ia of getIAsPorCategoria('IMAGEN')" [style.--mc]="ia.color">
+            <div class="m-model-icon" [style.background]="ia.bg" [style.border-color]="ia.color+'55'" [innerHTML]="getIASvgIcon(ia)"></div>
+            <div class="m-model-info">
+              <span class="m-model-label">{{ ia.label }}</span>
+              <span class="m-model-emp">{{ ia.empresa }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="m-section-label">Video</div>
+        <div class="m-models-list">
+          <div class="m-model-chip" *ngFor="let ia of getIAsPorCategoria('VIDEO')" [style.--mc]="ia.color">
+            <div class="m-model-icon" [style.background]="ia.bg" [style.border-color]="ia.color+'55'" [innerHTML]="getIASvgIcon(ia)"></div>
+            <div class="m-model-info">
+              <span class="m-model-label">{{ ia.label }}</span>
+              <span class="m-model-emp">{{ ia.empresa }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="m-section-label">Audio TTS</div>
+        <div class="m-models-list">
+          <div class="m-model-chip" *ngFor="let ia of getIAsPorCategoria('AUDIO')" [style.--mc]="ia.color">
+            <div class="m-model-icon" [style.background]="ia.bg" [style.border-color]="ia.color+'55'" [innerHTML]="getIASvgIcon(ia)"></div>
+            <div class="m-model-info">
+              <span class="m-model-label">{{ ia.label }}</span>
+              <span class="m-model-emp">{{ ia.empresa }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Footer sidebar -->
+    <div class="m-sidebar-footer">
+      <div class="m-user-row" (click)="abrirPerfil()">
+        <div class="m-avatar">{{ auth.usuario?.nombre?.charAt(0)?.toUpperCase() }}</div>
+        <div class="m-user-info">
+          <span class="m-user-name">{{ auth.usuario?.nombre }}</span>
+          <span class="m-user-role" *ngIf="esAdmin">Admin</span>
+        </div>
+      </div>
+      <div class="m-footer-actions">
+        <app-theme-toggle></app-theme-toggle>
+        <button class="m-btn-logout" (click)="logout()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MODAL PERFIL ════════════════════════════════════════════ -->
+  <div class="m-perfil-overlay" *ngIf="perfilOpen" (click)="perfilOpen=false">
+    <div class="m-perfil-modal" (click)="$event.stopPropagation()">
+      <div class="m-perfil-header">
+        <span>Editar perfil</span>
+        <button class="m-perfil-close" (click)="perfilOpen=false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="m-perfil-body">
+        <label>Nombre</label>
+        <input [(ngModel)]="perfilNombre" placeholder="Nombre" />
+        <label>Apellido</label>
+        <input [(ngModel)]="perfilApellido" placeholder="Apellido" />
+        <label>Email</label>
+        <input [(ngModel)]="perfilEmail" type="email" placeholder="Email" />
+        <label>Nueva contraseña <span class="m-label-opt">(opcional)</span></label>
+        <input [(ngModel)]="perfilPass" type="password" placeholder="Dejar vacío para no cambiar" />
+        <div class="m-perfil-error" *ngIf="perfilError">{{ perfilError }}</div>
+        <div class="m-perfil-ok" *ngIf="perfilOk">Guardado correctamente</div>
+        <button class="m-perfil-save" (click)="guardarPerfil()" [disabled]="perfilGuardando">
+          {{ perfilGuardando ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TOPBAR MÓVIL ════════════════════════════════════════════ -->
+  <header class="m-topbar">
+    <button class="m-topbar-menu" (click)="sidebarOpen=!sidebarOpen">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+    <div class="m-topbar-brand">
+      <img src="https://i.imgur.com/0jeqOIS.png" alt="SiftlyAI" class="m-topbar-logo">
+      <span>Siftly<span class="m-ai-accent">AI</span></span>
+    </div>
+    <button class="m-topbar-new" (click)="nuevaConversacion()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </header>
+
+  <!-- ══ MAIN ════════════════════════════════════════════════════ -->
+  <main class="m-main">
+
+    <!-- Bienvenida -->
+    <div class="m-welcome" *ngIf="!conversacionActualId && !cargando">
+      <div class="m-welcome-inner">
+        <div class="m-welcome-logo">
+          <img src="https://i.imgur.com/0jeqOIS.png" alt="SiftlyAI" class="m-welcome-img">
+          <div class="m-welcome-title">Siftly<span class="m-ai-accent">AI</span></div>
+        </div>
+        <p class="m-welcome-sub">Compara respuestas de múltiples IAs al mismo tiempo.</p>
+
+        <!-- IA chips grid — íconos SVG reales -->
+        <div class="m-ia-grid">
+          <div class="m-ia-group">
+            <span class="m-ia-group-label">Texto</span>
+            <div class="m-ia-chips">
+              <!-- Llama / Groq -->
+              <span class="m-ia-chip" style="--c:#f97316">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#f97316"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm2 9h-4V9h4v2z"/></svg>
+                Llama 3
+              </span>
+              <!-- Cohere -->
+              <span class="m-ia-chip" style="--c:#06b6d4">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#06b6d4"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                Cohere
+              </span>
+              <!-- Mistral -->
+              <span class="m-ia-chip" style="--c:#a855f7">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#a855f7"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>
+                Mistral
+              </span>
+              <!-- Gemini / Google -->
+              <span class="m-ia-chip" style="--c:#facc15">
+                <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Gemini
+              </span>
+              <!-- NVIDIA -->
+              <span class="m-ia-chip" style="--c:#76b900">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#76b900"><path d="M9 4v2.6C6.73 6.94 5 8.78 5 11c0 2.22 1.73 4.06 4 4.4V18H6v2h12v-2h-3v-2.6c2.27-.34 4-2.18 4-4.4 0-2.22-1.73-4.06-4-4.4V4H9zm3 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+                NVIDIA x2
+              </span>
+            </div>
+          </div>
+
+          <div class="m-ia-group">
+            <span class="m-ia-group-label">Imagen</span>
+            <div class="m-ia-chips">
+              <span class="m-ia-chip" style="--c:#00b4d8">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#00b4d8"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                Pollinations
+              </span>
+              <span class="m-ia-chip" style="--c:#9333ea">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#9333ea"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                xAI Grok
+              </span>
+              <span class="m-ia-chip" style="--c:#f43f5e">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#f43f5e"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm-1-5h2v2h-2v-2zm0-8h2v6h-2V7z"/></svg>
+                Recraft
+              </span>
+            </div>
+          </div>
+
+          <div class="m-ia-group">
+            <span class="m-ia-group-label">Video</span>
+            <div class="m-ia-chips">
+              <span class="m-ia-chip" style="--c:#f59e0b">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                Wan 2.6
+              </span>
+              <span class="m-ia-chip" style="--c:#ef4444">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                Veo Lite
+              </span>
+              <span class="m-ia-chip" style="--c:#6366f1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#6366f1"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                Grok Video
+              </span>
+            </div>
+          </div>
+
+          <div class="m-ia-group">
+            <span class="m-ia-group-label">Audio TTS</span>
+            <div class="m-ia-chips">
+              <span class="m-ia-chip" style="--c:#f97316">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#f97316"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                Groq Orpheus
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cargando -->
+    <div class="m-loading-center" *ngIf="cargando">
+      <div class="m-dots"><span></span><span></span><span></span></div>
+      <p class="m-loading-text">Cargando...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="m-error-center" *ngIf="error && !cargando">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Mensajes -->
+    <div class="m-messages" #messagesContainer *ngIf="conversacionActualId && !cargando && !error">
+
+      <div class="m-empty-chat" *ngIf="mensajes.length === 0">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" style="opacity:.2"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        <p>Escribe tu primera pregunta para comenzar</p>
+      </div>
+
+      <div *ngFor="let msg of mensajes; trackBy: trackById" class="m-msg-block">
+
+        <!-- Usuario -->
+        <div class="m-user-turn" *ngIf="msg.tipo === 'USUARIO'">
+          <div class="m-user-bubble">
+            <span class="m-tipo-tag m-tipo-imagen" *ngIf="msg.tipoContenido === 'IMAGEN'">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+              Imagen
+            </span>
+            <span class="m-tipo-tag m-tipo-video" *ngIf="msg.tipoContenido === 'VIDEO'">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+              Video
+            </span>
+            {{ msg.contenido }}
+          </div>
+        </div>
+
+        <!-- Respuestas IA -->
+        <div class="m-ia-turn" *ngIf="msg.tipo === 'USUARIO'">
+
+          <!-- Recibidas -->
+          <div
+            class="m-ia-card"
+            *ngFor="let resp of msg.respuestasIA; trackBy: trackById"
+            [class.best]="resp.esMejorRespuesta"
+            [style.--ia-color]="getIA(resp.modeloIA).color"
+            [style.--ia-bg]="getIA(resp.modeloIA).bg"
+          >
+            <div class="m-ia-card-top">
+              <div class="m-ia-id">
+                <div class="m-ia-avatar" [style.background]="getIA(resp.modeloIA).bg" [style.border-color]="getIA(resp.modeloIA).color+'55'" [innerHTML]="getIASvgIconByKey(resp.modeloIA)"></div>
+                <div class="m-ia-label-group">
+                  <span class="m-ia-label">{{ getIA(resp.modeloIA).label }}</span>
+                  <span class="m-ia-empresa">{{ getIA(resp.modeloIA).empresa }}</span>
+                </div>
+                <span class="m-best-tag" *ngIf="resp.esMejorRespuesta">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                  Mejor
+                </span>
+              </div>
+              <div class="m-ia-meta">
+                <span class="m-ia-ms" *ngIf="resp.tiempoRespuestaMs">{{ resp.tiempoRespuestaMs }}ms</span>
+              </div>
+            </div>
+
+            <div class="m-ia-card-body">
+              <!-- Imagen -->
+              <ng-container *ngIf="isAudioUrl(resp)">
+                <audio [src]="resp.urlArchivo" controls style="width:100%;margin-bottom:8px"></audio>
+                <a [href]="resp.urlArchivo" download="audio-tts.wav" class="m-btn-dl">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                  Descargar audio
+                </a>
+              </ng-container>
+
+              <ng-container *ngIf="!isAudioUrl(resp) && isImagenUrl(resp.urlArchivo)">
+                <img [src]="getProxiedUrl(resp.urlArchivo)" class="m-ia-img" alt="Imagen generada" loading="lazy" />
+                <a [href]="resp.urlArchivo" download class="m-btn-dl">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                  Descargar imagen
+                </a>
+              </ng-container>
+              <!-- Video -->
+              <ng-container *ngIf="!isAudioUrl(resp) && isVideoUrl(resp.urlArchivo)">
+                <video [src]="getProxiedUrl(resp.urlArchivo)" controls class="m-ia-video" preload="metadata">Tu navegador no soporta videos.</video>
+                <a [href]="resp.urlArchivo" download class="m-btn-dl">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                  Descargar video
+                </a>
+              </ng-container>
+              <!-- Texto -->
+              <ng-container *ngIf="!isAudioUrl(resp) && !isImagenUrl(resp.urlArchivo) && !isVideoUrl(resp.urlArchivo)">
+                <div class="m-ia-text md-body" [innerHTML]="renderMd(resp.respuesta)"></div>
+                <button class="m-btn-dl" (click)="descargarPDF(resp.respuesta, getIA(resp.modeloIA).label)" *ngIf="resp.respuesta">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                  Exportar PDF
+                </button>
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- Pendientes -->
+          <div
+            class="m-ia-card m-ia-pending"
+            *ngFor="let ia of iasPendientes(msg)"
+            [style.--ia-color]="getIA(ia).color"
+            [style.--ia-bg]="getIA(ia).bg"
+          >
+            <div class="m-ia-card-top">
+              <div class="m-ia-id">
+                <div class="m-ia-avatar m-pending-avatar" [style.background]="getIA(ia).bg" [style.border-color]="getIA(ia).color+'55'" [innerHTML]="getIASvgIconByKey(ia)"></div>
+                <div class="m-ia-label-group">
+                  <span class="m-ia-label">{{ getIA(ia).label }}</span>
+                  <span class="m-ia-empresa">{{ getIA(ia).empresa }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="m-ia-card-body m-pending-body">
+              <div class="m-typing-dots"><span></span><span></span><span></span></div>
+              <span class="m-typing-text">Generando...</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div #messagesEnd></div>
+    </div>
+
+    <!-- ══ INPUT BAR ════════════════════════════════════════════ -->
+    <div class="m-input-bar" [class.centered]="!conversacionActualId">
+      <div class="m-input-wrap">
+
+        <!-- Tipo de contenido -->
+        <div class="m-tipo-row">
+          <button class="m-tipo-btn" [class.on]="tipoContenido==='TEXTO'" (click)="tipoContenido='TEXTO'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+            Texto
+          </button>
+          <button class="m-tipo-btn" [class.on]="tipoContenido==='IMAGEN'" (click)="tipoContenido='IMAGEN'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            Imagen
+          </button>
+          <button class="m-tipo-btn" [class.on]="tipoContenido==='VIDEO'" (click)="tipoContenido='VIDEO'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+            Video
+          </button>
+          <button class="m-tipo-btn" [class.on]="tipoContenido==='AUDIO_TTS'" (click)="tipoContenido='AUDIO_TTS'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            TTS
+          </button>
+        </div>
+
+        <!-- Input row -->
+        <div class="m-input-row">
+          <textarea
+            #inputRef
+            class="m-input-field"
+            [(ngModel)]="prompt"
+            [placeholder]="getPlaceholder()"
+            (keydown.enter)="onEnter($event)"
+            rows="1"
+          ></textarea>
+          <button class="m-btn-send" (click)="enviar()" [disabled]="enviando || !prompt.trim()">
+            <svg *ngIf="!enviando" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            <div *ngIf="enviando" class="m-send-dots"><span></span><span></span><span></span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

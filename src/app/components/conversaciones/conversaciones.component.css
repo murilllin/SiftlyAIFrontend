@@ -1,0 +1,87 @@
+.page {
+  max-width: 760px;
+  margin: 80px auto 40px;
+  padding: 32px 24px;
+}
+.header { margin-bottom: 28px; }
+h1 { color: #fff; font-size: 1.8rem; font-weight: 800; margin: 0 0 8px; }
+.sub { color: #777; margin: 0; font-size: 0.95rem; }
+.nueva-conv {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.input-titulo {
+  flex: 1;
+  background: #111118;
+  border: 1px solid #2a2a38;
+  border-radius: 10px;
+  color: #fff;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-titulo:focus { border-color: #6c63ff; }
+.btn-crear {
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  min-width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-crear:hover:not(:disabled) { background: #5a52e0; }
+.btn-crear:disabled { opacity: 0.6; }
+.error-msg { color: #ff6b6b; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; }
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+.empty-icon { font-size: 3rem; margin-bottom: 12px; }
+.lista { display: flex; flex-direction: column; gap: 10px; }
+.conv-card {
+  background: #111118;
+  border: 1px solid #1e1e2a;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.conv-card:hover { border-color: #6c63ff; background: #14141e; }
+.conv-info { display: flex; flex-direction: column; gap: 4px; }
+.conv-titulo { color: #fff; font-weight: 600; font-size: 1rem; }
+.conv-fecha { color: #666; font-size: 0.8rem; }
+.conv-actions { display: flex; align-items: center; gap: 10px; }
+.ia-badge {
+  background: rgba(108,99,255,0.15);
+  color: #6c63ff;
+  border: 1px solid rgba(108,99,255,0.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.btn-eliminar {
+  background: transparent;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+.btn-eliminar:hover { color: #ff6b6b; background: rgba(255,107,107,0.1); }

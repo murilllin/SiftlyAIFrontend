@@ -1,0 +1,18 @@
+<nav class="navbar">
+  <div class="nav-brand" routerLink="/chat">
+    <span class="brand-name">Siftly<span style="color:var(--color-accent)">AI</span></span>
+  </div>
+  <div class="nav-actions" *ngIf="auth.isLoggedIn">
+    <a routerLink="/admin" *ngIf="auth.isAdmin" class="nav-admin-btn" title="Panel Admin">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      Admin
+    </a>
+    <app-theme-toggle></app-theme-toggle>
+    <div class="user-avatar" [title]="(auth.usuario?.nombre || '') + ' ' + (auth.usuario?.apellido || '')">
+      {{ auth.usuario?.nombre?.charAt(0)?.toUpperCase() }}
+    </div>
+    <button class="btn-logout" (click)="logout()" title="Cerrar sesion">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+    </button>
+  </div>
+</nav>
